@@ -44,14 +44,29 @@ read_signal_matrix = function(inputfile){
 	return(data_signal_matrix)
 }
 
+### read DNA region matrix
+read_DNAregion_matrix = function(inputfile){
+	### read matrix as string matrix
+	data_signal_matrix = as.matrix(read.table(inputfile, header=F, sep='\t'))
+	rownames(data_signal_matrix) = data_signal_matrix[,1]
+	data_signal_matrix = data_signal_matrix[,-1]
+	return(data_signal_matrix)
+}
+
+### get DNA region intervals
+index_region_matrix = read_DNAregion_matrix('DNA_regin_210k_indexsort_onlyinterval.txt')[c(1:1000),]
+### index region length
+index_region_length = as.numeric(index_region_matrix[,3]) - as.numeric(index_region_matrix[,2])[c(1:1000)]
+
+
 ### get index binary label matrix
-index_label_matrix = read_index_matrix('celltype.index.sorted.txt')
+index_label_matrix = read_index_matrix('celltype.index.sorted.txt')[c(1:1000)]
 
 ### get index signal matrix
-index_sig_matrix = read_signal_matrix('celltype.index.tpm.sorted.txt') 
+index_sig_matrix = read_signal_matrix('celltype.index.tpm.sorted.txt')[c(1:1000),]
 
 ### get index_set binary labels
-index_set_filtered_matrix = read_signal_matrix('celltype.index_set_filtered.sorted.txt')
+index_set_filtered_matrix = read_signal_matrix('celltype.index_set_filtered.sorted.txt')[c(1,2),]
 ### to numeric matrix
 class(index_set_filtered_matrix) = "numeric"
 index_set_filtered_label = rownames(index_set_filtered_matrix)
@@ -85,20 +100,25 @@ for (i in c(1: length(index_set_filtered_label))){
 	x_mean = colMeans(index_sig_i)
 	x_cor = cor(index_sig_i)
 
+	print(x_mean)
 	### read mvnorm function for matrix
 	pmvnorm_all = function(vector){
 		x_mean_used <<- x_mean
 		x_cor_used <<- x_cor
-		p = pmvnorm(mean = x_mean_used, corr = x_cor_used, upper=vector, lower=rep(-Inf, length(x_mean)))
-		return(p[1])
+		#p = pmvnorm(mean = x_mean_used, corr = x_cor_used, upper=vector, lower=rep(-Inf, length(x_mean)))
+		p = pmvnorm(mean = x_mean_used, corr = x_cor_used, upper=x_mean_used+abs(vector-x_mean_used), lower=x_mean_used-abs(vector-x_mean_used))
+		return(1 - p[1])
 	}
 
 	### calculate the probability based on pmvnorm
 	print('start pmvnorm')
 	index_sig_matrix_i_p = apply(index_sig_matrix_log2, MARGIN=1, FUN=function(x) pmvnorm_all(x))
 
+	### consider overall index set region length
+	index_sig_matrix_i_p_p = index_sig_matrix_i_p * index_region_length
+
 	###
-	index_sig_matrix_p_call = cbind(index_sig_matrix_p_call, index_sig_matrix_i_p)
+	index_sig_matrix_p_call = cbind(index_sig_matrix_p_call, index_sig_matrix_i_p_p)
 }
 
 ### NOT enriched index set:
@@ -109,27 +129,48 @@ for (i in c(1)){
 	### (plus 0.01 then log2 transform)
 	index_sig_i = log2(index_sig_matrix[enriched_index_set_position==0, ] + 0.01)
 
+	print(dim(index_sig_i))
+	print(head(index_sig_i))
 	### boxplot index_set cell type signals
-	png(paste('index_set_boxplot/index_set_boxplot.', toString(i), '.', 'NOT_enriched', '.png', sep=''))
-	boxplot(index_sig_i, ylim=c(min(index_sig_matrix_log2), quantile(index_sig_matrix_log2, probs=0.99)))
-	dev.off()
+	if (dim(index_sig_i)[1] > 0){
+		png(paste('index_set_boxplot/index_set_boxplot.', toString(i), '.', 'NOT_enriched', '.png', sep=''))
+		boxplot(index_sig_i, ylim=c(min(index_sig_matrix_log2), quantile(index_sig_matrix_log2, probs=0.99)))
+		dev.off()
 
-	### get index_set mean vector & correlation matrix 
-	x_mean = colMeans(index_sig_i)
-	x_cor = cor(index_sig_i)
+		### get index_set mean vector & correlation matrix 
+		x_mean = colMeans(index_sig_i)
+		x_cor = cor(index_sig_i)
 
-	### 
-	index_sig_matrix_i_p = c()
-	for ( j in c(1: dim(index_sig_matrix_log2)[1]) ){
-		if (i%%1000==0){
-			print(j)
+		print(x_mean)
+		### read mvnorm function for matrix
+		pmvnorm_all = function(vector){
+			x_mean_used <<- x_mean
+			x_cor_used <<- x_cor
+			#p = pmvnorm(mean = x_mean_used, corr = x_cor_used, upper=vector, lower=rep(-Inf, length(x_mean)))
+			p = pmvnorm(mean = x_mean_used, corr = x_cor_used, upper=x_mean_used+abs(vector-x_mean_used), lower=x_mean_used-abs(vector-x_mean_used))
+			return(1 - p[1])
 		}
-		p = pmvnorm_all(index_sig_matrix_log2[j,], x_mean, x_cor)
-		index_sig_matrix_i_p[j] = p[1]
-	}
 
-	###
-	index_sig_matrix_p_call = cbind(index_sig_matrix_p_call, index_sig_matrix_i_p)
+		### calculate the probability based on pmvnorm
+		print('start pmvnorm')
+		index_sig_matrix_i_p = apply(index_sig_matrix_log2, MARGIN=1, FUN=function(x) pmvnorm_all(x))
+
+		### consider overall index set region length
+		index_sig_matrix_i_p_p = index_sig_matrix_i_p * index_region_length
+
+		### 
+		index_sig_matrix_i_p = c()
+		for ( j in c(1: dim(index_sig_matrix_log2)[1]) ){
+			p = pmvnorm_all(index_sig_matrix_log2[j,], x_mean, x_cor)
+			index_sig_matrix_i_p[j] = p[1]
+		}
+
+		### consider overall index set region length
+		index_sig_matrix_i_p_p = index_sig_matrix_i_p * index_region_length
+
+		###
+		index_sig_matrix_p_call = cbind(index_sig_matrix_p_call, index_sig_matrix_i_p_p)	
+	}
 }
 
 
@@ -143,20 +184,21 @@ rownames(index_sig_matrix_p_call) = rownames(index_sig_matrix)
 print('get index call probability matrix')
 index_sig_matrix_p_call = t( apply(index_sig_matrix_p_call, MARGIN=1, FUN=function(x) x/sum(x)) )
 ### write all index set call & probability 
-write.table(index_sig_matrix_index_set_call, 'index_sig_matrix_index_set_call.txt', quote=F, sep='\t', row.names = TRUE, col.names = NA)
+write.table(index_sig_matrix_p_call, 'index_sig_matrix_p_call.txt', quote=F, sep='\t', row.names = TRUE, col.names = NA)
 
 ### get belonging index set id
 print('get index call index_id & probability')
 index_sig_matrix_index_set_call = t( apply((index_sig_matrix_p_call), MARGIN=1, FUN=function(x) c(which.max(x), max(x))) )
+colnames(index_sig_matrix_index_set_call) = c('index_set_id', 'probability')
 ### write all index set probility matrix 
-write.table(index_sig_matrix_p_call, 'index_sig_matrix_p_call.txt', quote=F, sep='\t', row.names = TRUE, col.names = NA)
+write.table(index_sig_matrix_index_set_call, 'index_sig_matrix_index_set_call.txt', quote=F, sep='\t', row.names = TRUE, col.names = )
 
 
 
 ############################################
 print('sort index based on new index call')
 ### sort input signal matrix based on the new index set call
-index_sig_matrix_sort = index_sig_matrix[order(index_sig_matrix_index_set_call[i,1]), ]
+index_sig_matrix_sort = index_sig_matrix[order(index_sig_matrix_index_set_call[,1]), ]
 ### write all index set call & probability 
 write.table(index_sig_matrix_sort, 'index_sig_matrix_sort.txt', quote=F, sep='\t', row.names = TRUE, col.names = NA)
 
@@ -165,19 +207,23 @@ write.table(index_sig_matrix_sort, 'index_sig_matrix_sort.txt', quote=F, sep='\t
 ############################################
 print('get new index set numbers:')
 ### recalculate index set DNA region number
-index_set_num = table(index_sig_matrix_index_set_call[i,1])
-
+index_set_num = table(index_sig_matrix_index_set_call[,1])
+print(index_set_num)
+print(dim(index_set_num))
 ### change previous index set number to new called number
 #index_set_filtered_matrix = index_set_filtered_matrix[c(1:15),]
 index_set_filtered_matrix_recalnum = c()
 for (i in c(1: dim(index_set_filtered_matrix)[1])){
 	index_set_filtered_matrix_vec = index_set_filtered_matrix[i, ]
-
 	### recalculate the number of DNA region in index set
 	index_set_filtered_matrix_vec_new = index_set_filtered_matrix_vec / max(index_set_filtered_matrix_vec) * index_set_num[i]
-
 	index_set_filtered_matrix_recalnum = cbind(index_set_filtered_matrix_recalnum, index_set_filtered_matrix_vec_new)
 }
+
+index_set_filtered_matrix_recalnum = t( index_set_filtered_matrix_recalnum )
+
+print(dim(index_set_filtered_matrix))
+print(dim(index_set_filtered_matrix_recalnum))
 
 ### add colnames & rownames
 colnames(index_set_filtered_matrix_recalnum) = colnames(index_set_filtered_matrix)
