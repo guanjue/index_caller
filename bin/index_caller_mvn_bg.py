@@ -187,6 +187,7 @@ for iteration_num in range(0,100):
 
 	##################
 	###### set the index-set with highest p as the index-set label for each bin
+	print(mvn_qda_p_matrix[0:3,:])
 	cluster_id = np.argmax(mvn_qda_p_matrix, axis=1)
 	#print(cluster_id)
 	#print(mvn_qda_p_matrix[0:3,:])
