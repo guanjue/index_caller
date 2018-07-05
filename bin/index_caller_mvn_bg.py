@@ -154,10 +154,10 @@ for iteration_num in range(0,100):
 
 			##################
 			###### calculate mvn density score for each index-set i
-			mvn_qda = -1/2*np.log(np.linalg.det(data_sig_cov_i)) - np.sum(np.dot((data_sig-data_sig_mean_i), np.linalg.inv(data_sig_cov_i)) * (data_sig-data_sig_mean_i), axis=1) + np.log(data_sig_p_i) #+ constant
+			mvn_qda = -1/2*np.log(np.linalg.det(data_sig_cov_i)) - np.sum(np.dot((data_sig_matrix-data_sig_mean_i), np.linalg.inv(data_sig_cov_i)) * (data_sig_matrix-data_sig_mean_i), axis=1) + np.log(data_sig_p_i) #+ constant
 		else:
 			#print(data_sig_cov_i)
-			mvn_qda = -1/2*np.log(np.linalg.det(data_sig_cov_i)) - np.sum(np.dot((data_sig-data_sig_mean_i), np.linalg.inv(data_sig_cov_i)) * (data_sig-data_sig_mean_i), axis=1) + np.log(data_sig_p_i) #+ constant
+			mvn_qda = -1/2*np.log(np.linalg.det(data_sig_cov_i)) - np.sum(np.dot((data_sig_matrix-data_sig_mean_i), np.linalg.inv(data_sig_cov_i)) * (data_sig_matrix-data_sig_mean_i), axis=1) + np.log(data_sig_p_i) #+ constant
 		mvn_qda_matrix.append(mvn_qda)
 
 	all_cov = (np.array(all_cov))
