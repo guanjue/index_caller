@@ -144,7 +144,7 @@ for iteration_num in range(0,100):
 		###### get max std of index-set i
 		std_max_i = np.max(np.sqrt(np.diag(data_sig_cov_i)))
 
-
+		print(data_sig_cov_i)
 		##################
 		###### if std_max_i > std_lim -> convert covariance_matrix to correlation_matrix + std_vector -> set std > std_lim to std_lim
 		if std_max_i > std_lim:
