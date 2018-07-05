@@ -28,6 +28,9 @@ def write2d_array(array,output):
 def cov2corr(cov, return_std=False):
 	cov = np.asanyarray(cov)
 	std_ = np.sqrt(np.diag(cov))
+	print(std_)
+	std_[std_<=0.0]=0.0
+	print(std_)
 	corr = cov / np.outer(std_, std_)
 	if return_std:
 		return corr, std_
@@ -187,7 +190,7 @@ for iteration_num in range(0,100):
 
 	##################
 	###### set the index-set with highest p as the index-set label for each bin
-	print(mvn_qda_p_matrix[0:3,:])
+	print(mvn_qda_p_matrix[0,:])
 	cluster_id = np.argmax(mvn_qda_p_matrix, axis=1)
 	#print(cluster_id)
 	#print(mvn_qda_p_matrix[0:3,:])
