@@ -58,7 +58,7 @@ data_new_bg = data_new[data_new_bg_id,:]
 data_new_bg_label = np.repeat('0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0', random_sample_num).reshape(random_sample_num, 1)
 data_new_bg = np.concatenate((data_new_bg[:,0].reshape(random_sample_num,1), data_new_bg_label, data_new_bg[:,1:]), axis=1)
 
-data_new_sig = data_new[:,0:].astype(float)
+data_new_sig = data_new[:,1:].astype(str)
 data_New_sig_matrix_bed = data_new[:,0]
 
 
