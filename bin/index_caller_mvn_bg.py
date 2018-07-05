@@ -198,7 +198,7 @@ for iteration_num in range(0,100):
 	###### get the highest probability
 	y_pred = np.amax(mvn_qda_p_matrix, axis=1)
 	#print(cluster_id.shape)
-	data_index_vec.append('0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0')
+	data_index_vec = np.append(data_index_vec, '0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0')
 
 
 	data_index_pred_count = {}
