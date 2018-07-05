@@ -69,8 +69,6 @@ data = read2d_array('snapshot20_reproduce_2_16lim/atac_20cell.sig.txt', str)
 ###### add randomly selected signals to the train index matrix based on peak calling results
 #data = np.concatenate((data, data_new_bg), axis=0)
 
-data_sig = data[:,1:].astype(str)
-
 for iteration_num in range(0,100):
 	print(data[0:3])
 	data_sig_dict = {}
@@ -232,8 +230,8 @@ for iteration_num in range(0,100):
 			count_table.write(str(0)+'-'+str(0)+'=' +str(0)+'\n')
 	count_table.close()
 
-
-	data_sig[:,0] = index_pred_vec
+	### updata previous signal matrix
+	data[:,1] = index_pred_vec
 
 
 
