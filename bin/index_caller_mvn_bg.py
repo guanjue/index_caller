@@ -28,9 +28,9 @@ def write2d_array(array,output):
 def cov2corr(cov, return_std=False):
 	cov = np.asanyarray(cov)
 	std_ = np.sqrt(np.diag(cov))
-	print(std_)
-	std_[std_<=0.0]=0.0
-	print(std_)
+	#print(std_)
+	std_[std_<=1.0]=1.0
+	#print(std_)
 	corr = cov / np.outer(std_, std_)
 	if return_std:
 		return corr, std_
