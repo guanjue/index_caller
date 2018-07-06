@@ -48,7 +48,7 @@ def corr2cov(corr, std):
 ################################################################################################
 ### get convert bedtools window output to matrix of pk and intersect function label info
 #data_new = read2d_array('atac_20cell_wg.indexcaller.txt', str)
-data_new = read2d_array('atac_20cell.sig.txt', str)
+data_new = read2d_array('atac_20cell.sig.18.txt', str)
 
 
 
@@ -66,9 +66,13 @@ data_new_sig = data_new[:,1:].astype(str)
 data_New_sig_matrix_bed = data_new[:,0]
 '''
 
-data = read2d_array('atac_20cell.sig.txt', str)
+data = read2d_array('atac_20cell.sig.18.txt', str)
+l_add, h_add = -0.1, 0.1
 
+data_sig = np.array(data[:,2:], dtype=float)
+data_sig = np.add(data_sig, np.random.uniform(l_add, h_add, data.shape[0] * (data.shape[1]-2)).reshape(data.shape[0], (data.shape[1]-2)))
 
+data[:,2:] = data_sig
 ##################
 ###### add randomly selected signals to the train index matrix based on peak calling results
 #data = np.concatenate((data, data_new_bg), axis=0)
@@ -123,7 +127,7 @@ for iteration_num in range(0,100):
 			###### get min std of index-set i
 			std_vector = np.sqrt(np.diag(cov_matrix))
 			std_0_num = np.sum(std_vector==0)
-			
+			'''
 			if std_0_num > 0:
 				for i in np.argwhere(std_vector==0):
 					mu, sigma = 0, 0.1
@@ -131,7 +135,7 @@ for iteration_num in range(0,100):
 					add_noise = np.random.normal(mu, sigma, peak_num)
 					data_sig_matrix_i[:,i] = add_noise.reshape(peak_num,1)
 				cov_matrix = np.cov(data_sig_matrix_i.T)
-			
+			'''
 			##################
 			###### get max std of index-set i
 			std_max = np.max(std_vector)
@@ -140,7 +144,7 @@ for iteration_num in range(0,100):
 				corr_i, std_i = cov2corr(cov_matrix, return_std=True)
 				std_adj_num = np.sum(std_i>std_upper_lim)
 				std_upper_lim_add_noise = np.random.normal(std_upper_lim, 0.01, std_adj_num)
-				std_i[std_i>std_upper_lim] = std_upper_lim_add_noise
+				std_i[std_i>std_upper_lim] = 3.0#std_upper_lim_add_noise
 				#std_i = std_i / np.max(std_i) * std_upper_lim
 				cov_matrix = corr2cov(corr_i, std_i)
 				#print(data_sig_cov_i)
@@ -148,7 +152,7 @@ for iteration_num in range(0,100):
 			data_sig_cov_dict[index] = cov_matrix
 			data_sig_cov_all.append(data_sig_cov_dict[index])
 		### for exmpty 0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0
-		data_sig_mean_dict['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'] = np.repeat(2.0, ct_num)
+		data_sig_mean_dict['0_0_0_0_0'] = np.repeat(2.0, ct_num)
 		cov_matrix = np.identity(ct_num)
 		data_sig_cov_dict[index] = cov_matrix
 		data_sig_cov_all.append(data_sig_cov_dict[index])		
@@ -167,7 +171,7 @@ for iteration_num in range(0,100):
 				###### get min std of index-set i
 				std_vector = np.sqrt(np.diag(cov_matrix))
 				std_0_num = np.sum(std_vector==0)
-				
+				'''
 				if std_0_num > 0:
 					for i in np.argwhere(std_vector==0):
 						mu, sigma = 0, 0.1
@@ -175,7 +179,7 @@ for iteration_num in range(0,100):
 						add_noise = np.random.normal(mu, sigma, peak_num)
 						data_sig_matrix_i[:,i] = add_noise.reshape(peak_num,1)
 					cov_matrix = np.cov(data_sig_matrix_i.T)
-				
+				'''
 				##################
 				###### get max std of index-set i
 				std_max = np.max(std_vector)	
@@ -183,7 +187,7 @@ for iteration_num in range(0,100):
 					corr_i, std_i = cov2corr(cov_matrix, return_std=True)
 					std_adj_num = np.sum(std_i>std_upper_lim)
 					std_upper_lim_add_noise = np.random.normal(std_upper_lim, 0.01, std_adj_num)
-					std_i[std_i>std_upper_lim] = std_upper_lim_add_noise
+					std_i[std_i>std_upper_lim] = 3.0#std_upper_lim_add_noise
 					#std_i = std_i / np.max(std_i) * std_upper_lim
 					cov_matrix = corr2cov(corr_i, std_i)
 					#print(data_sig_cov_i)
@@ -198,7 +202,7 @@ for iteration_num in range(0,100):
 
 	##################
 	###### add non-peak prior to prior vector
-	#data_sig_p_dict['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'] = 1.0 - 215120.0/13554672.0
+	#data_sig_p_dict['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'] = 1.0 - 2.18.20.0/1.18.4672.0
 
 	data_sig_cov_all = np.array(data_sig_cov_all)
 	mvn_qda_matrix = []
@@ -308,14 +312,14 @@ for iteration_num in range(0,100):
 	print(np.sum(mvn_qda_p_matrix, axis=1)[0:10])
 	'''
 	##################
-	###### if 1-sum_mvn_p > 0.5 -> set to index-set 0
-	#if iteration_num == 0:
-	#	mvn_qda_p0_matrix = 1.0-np.max(mvn_qda_p_matrix, axis=1)
-	#	mvn_qda_p_matrix = np.concatenate((mvn_qda_p_matrix, mvn_qda_p0_matrix.reshape(mvn_qda_p0_matrix.shape[0], 1)), axis=1)
+	###### if 1-sum_mvn_p > 0.18.-> set to index-set 0
+	if iteration_num == 0:
+		mvn_qda_p0_matrix = 1.0-np.max(mvn_qda_p_matrix, axis=1)
+		mvn_qda_p_matrix = np.concatenate((mvn_qda_p_matrix, mvn_qda_p0_matrix.reshape(mvn_qda_p0_matrix.shape[0], 1)), axis=1)
 
 	'''
 	print('no pk:')
-	print(np.sum(mvn_qda_p0_matrix>0.5))
+	print(np.sum(mvn_qda_p0_matrix>0.18.)
 	'''
 	
 
@@ -335,7 +339,7 @@ for iteration_num in range(0,100):
 	###### get the highest probability
 	y_pred = np.amax(mvn_qda_p_matrix, axis=1)
 	#print(cluster_id.shape)
-	#data_index_vec = np.append(data_index_vec, '0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0')
+	data_index_vec = np.append(data_index_vec, '0_0_0_0_0')
 
 	### count index-set number
 	data_index_pred_count = {}
@@ -408,7 +412,7 @@ for iteration_num in range(0,100):
 	data[:,1] = index_pred_vec
 
 change_num_all = np.array(change_num_all)
-write2d_array(change_num_all, 'change_num_all.txt')
+write2d_array(change_num_all, 'change_num_all.18.txt')
 
 
 
@@ -431,32 +435,40 @@ data[:,1] = data_sig_pred_vec
 
 data = np.array(data)
 
-write2d_array(data, 'data.adj.txt')
+write2d_array(data, 'data.adj.18.txt')
 
 
 
+data_sig_pred_dict = {}
+cluster_vec = []
+for records in data:
+	cluster = records[1]
+	if not (cluster in data_sig_pred_dict):
+		data_sig_pred_dict[cluster] = [ records[2:] ]
+		cluster_vec.append(cluster)
+	else:
+		data_sig_pred_dict[cluster].append(records[2:])
+
+cluster_vec = np.sort(np.array(cluster_vec))
+
+pred_cluster_mean = []
+
+for cluster in cluster_vec:
+	sig_mat = np.array(data_sig_pred_dict[cluster], dtype=float)
+	sig_mat_mean = np.mean(sig_mat, axis=0)
+	pred_cluster_mean.append(sig_mat_mean)
+
+pred_cluster_mean = np.array(pred_cluster_mean)
+
+data_sig_out = np.concatenate((cluster_vec.reshape((cluster_vec).shape[0],1), pred_cluster_mean), axis=1)
+write2d_array(data_sig_out, 'qda_atac_wg.mvn_check.18.txt')
 
 
 
-data_sig_mean = []
-
-data_index_vec_pred_sort = []
-for index in data_index_vec:
-	if index in data_sig_pred_dict:
-		data_sig_mean_i = np.mean(np.array(data_sig_pred_dict[index], dtype=float), axis=0)
-		data_sig_mean.append(data_sig_mean_i)
-		data_index_vec_pred_sort.append(index)
-
-data_index_vec_pred_sort = np.array(data_index_vec_pred_sort)
-data_sig_mean = np.array(data_sig_mean)
-
-data_sig_out = np.concatenate((np.array(data_index_vec_pred_sort).reshape((data_index_vec_pred_sort).shape[0],1), data_sig_mean), axis=1)
-write2d_array(data_sig_out, 'qda_atac_wg.mvn_check.txt')
-
-print(data_New_sig_matrix_bed.shape)
-print(y_pred.shape)
-data_sig_out_matrix = np.concatenate((data_New_sig_matrix_bed.reshape((y_pred).shape[0],1), np.array(index_pred_vec).reshape((y_pred).shape[0],1), np.array(y_pred).reshape((y_pred).shape[0],1), data_new_sig), axis=1)
-write2d_array(data_sig_out_matrix, 'qda_atac_matrix_wg_check.mvn.txt')
+#print(data_New_sig_matrix_bed.shape)
+#print(y_pred.shape)
+#data_sig_out_matrix = np.concatenate((data_New_sig_matrix_bed.reshape((y_pred).shape[0],1), np.array(index_pred_vec).reshape((y_pred).shape[0],1), np.array(y_pred).reshape((y_pred).shape[0],1), data_new_sig), axis=1)
+#write2d_array(data_sig_out_matrix, 'qda_atac_matrix_wg_check.mvn.18.txt')
 
 
 
