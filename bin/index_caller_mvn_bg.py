@@ -29,7 +29,7 @@ def cov2corr(cov, return_std=False):
 	cov = np.asanyarray(cov)
 	std_ = np.sqrt(np.diag(cov))
 	#print(std_)
-	std_[std_<=1.0]=1.0
+	#std_[std_<=0.1]=0.1
 	#print(std_)
 	corr = cov / np.outer(std_, std_)
 	if return_std:
@@ -48,13 +48,14 @@ def corr2cov(corr, std):
 ################################################################################################
 ### get convert bedtools window output to matrix of pk and intersect function label info
 #data_new = read2d_array('atac_20cell_wg.indexcaller.txt', str)
-data_new = read2d_array('snapshot20_reproduce_2_16lim/atac_20cell.sig.txt', str)
+data_new = read2d_array('atac_20cell.sig.txt', str)
 
 
 
 ##################
 ###### randomly select # bins from whole genome as index-set 0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0
 np.random.seed(2018)
+'''
 random_sample_num = 100000
 data_new_bg_id = np.random.randint(data_new.shape[0], size=random_sample_num)
 data_new_bg = data_new[data_new_bg_id,:]
@@ -63,16 +64,28 @@ data_new_bg = np.concatenate((data_new_bg[:,0].reshape(random_sample_num,1), dat
 
 data_new_sig = data_new[:,1:].astype(str)
 data_New_sig_matrix_bed = data_new[:,0]
+'''
 
-
-data = read2d_array('snapshot20_reproduce_2_16lim/atac_20cell.sig.txt', str)
+data = read2d_array('atac_20cell.sig.txt', str)
 
 
 ##################
 ###### add randomly selected signals to the train index matrix based on peak calling results
 #data = np.concatenate((data, data_new_bg), axis=0)
 
+##################
+###### set std upper limit for each index-set xi
+std_upper_lim = np.sqrt(9.0)
+std_lower_lim = np.sqrt(1.0)
+
+
+data_sig_mean_dict = {}
+data_sig_cov_dict = {}
+data_sig_p_dict = {}
+data_sig_cov_all = []
+
 for iteration_num in range(0,100):
+
 	print(data[0:3])
 	data_sig_dict = {}
 	data_index_vec = []
@@ -94,23 +107,91 @@ for iteration_num in range(0,100):
 
 
 	###### get mean vector & covariance matrix & prior vector of index-sets based peak calling index-sets
-	data_sig_mean_dict = {}
-	data_sig_cov_dict = {}
-	data_sig_p_dict = {}
 	data_sig_cov_all = []
 	total_row_num = data.shape[0]
-	for index in data_sig_dict:
-		data_sig_dict[index] = np.array(data_sig_dict[index], dtype=float)
-		data_sig_mean_dict[index] = np.mean(data_sig_dict[index], axis=0)
-		data_sig_cov_dict[index] = np.cov(data_sig_dict[index].T)
-		data_sig_p_dict[index] = float(data_sig_dict[index].shape[0]) / total_row_num
-		data_sig_cov_all.append(data_sig_cov_dict[index])
+	ct_num = data.shape[1]
+	if iteration_num == 0:
+		for index in data_sig_dict:
+			data_sig_matrix_i = np.array(data_sig_dict[index], dtype=float)
+			data_sig_dict[index] = data_sig_matrix_i
+			data_sig_p_dict[index] = float(data_sig_matrix_i.shape[0]) / total_row_num
+			data_sig_mean_dict[index] = np.mean(data_sig_matrix_i, axis=0)
+			cov_matrix = np.cov(data_sig_matrix_i.T)
+
+			##################
+			###### get min std of index-set i
+			std_vector = np.sqrt(np.diag(cov_matrix))
+			std_0_num = np.sum(std_vector==0)
+			
+			if std_0_num > 0:
+				for i in np.argwhere(std_vector==0):
+					mu, sigma = 0, 0.1
+					peak_num = data_sig_matrix_i.shape[0]
+					add_noise = np.random.normal(mu, sigma, peak_num)
+					data_sig_matrix_i[:,i] = add_noise.reshape(peak_num,1)
+				cov_matrix = np.cov(data_sig_matrix_i.T)
+
+			##################
+			###### get max std of index-set i
+			std_max = np.max(std_vector)
+			
+			if std_max > std_upper_lim:
+				corr_i, std_i = cov2corr(cov_matrix, return_std=True)
+				std_i[std_i>std_upper_lim] = std_upper_lim
+				#std_i = std_i / np.max(std_i) * std_upper_lim
+				cov_matrix = corr2cov(corr_i, std_i)
+				#print(data_sig_cov_i)
+			#data_sig_cov_i[np.isnan(data_sig_cov_i)] = 1e-5
+			data_sig_cov_dict[index] = cov_matrix
+			data_sig_cov_all.append(data_sig_cov_dict[index])
+	else:
+		###### if the sample number decrease to 0
+		for index in data_sig_mean_dict:
+			if index in data_sig_dict:
+				data_sig_matrix_i = np.array(data_sig_dict[index], dtype=float)
+				data_sig_dict[index] = data_sig_matrix_i
+				data_sig_p_dict[index] = float(data_sig_matrix_i.shape[0]) / total_row_num
+				data_sig_mean_dict[index] = np.mean(data_sig_matrix_i, axis=0)
+				cov_matrix = np.cov(data_sig_matrix_i.T)		
+				##################
+				###### get min std of index-set i
+				std_vector = np.sqrt(np.diag(cov_matrix))
+				std_0_num = np.sum(std_vector==0)
+				
+				if std_0_num > 0:
+					for i in np.argwhere(std_vector==0):
+						mu, sigma = 0, 0.1
+						peak_num = data_sig_matrix_i.shape[0]
+						add_noise = np.random.normal(mu, sigma, peak_num)
+						data_sig_matrix_i[:,i] = add_noise.reshape(peak_num,1)
+					cov_matrix = np.cov(data_sig_matrix_i.T)
+				else:
+					data_sig_dict[index] = data_sig_matrix_i
+					data_sig_p_dict[index] = float(data_sig_matrix_i.shape[0]) / total_row_num
+					data_sig_mean_dict[index] = np.mean(data_sig_matrix_i, axis=0)
+					cov_matrix = np.cov(data_sig_matrix_i.T)		
+				##################
+				###### get max std of index-set i
+				std_max = np.max(std_vector)
+				
+				if std_max > std_upper_lim:
+					corr_i, std_i = cov2corr(cov_matrix, return_std=True)
+					std_i[std_i>std_upper_lim] = std_upper_lim
+					#std_i = std_i / np.max(std_i) * std_upper_lim
+					cov_matrix = corr2cov(corr_i, std_i)
+					#print(data_sig_cov_i)
+			else:
+				data_sig_mean_dict[index] = np.repeat(2.0, ct_num)
+				cov_matrix = np.identity(ct_num)
 
 
+			#data_sig_cov_i[np.isnan(data_sig_cov_i)] = 1e-5
+			data_sig_cov_dict[index] = cov_matrix
+			data_sig_cov_all.append(data_sig_cov_dict[index])		
 
 	##################
 	###### add non-peak prior to prior vector
-	data_sig_p_dict['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'] = 1.0 - 215120.0/13554672.0
+	#data_sig_p_dict['0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0'] = 1.0 - 215120.0/13554672.0
 
 
 	data_sig_cov_all = np.array(data_sig_cov_all)
@@ -120,9 +201,7 @@ for iteration_num in range(0,100):
 
 
 
-	##################
-	###### set std upper limit for each index-set xi
-	std_lim = np.sqrt(3.0)
+
 	all_cov = []
 	#constant = -18/2*np.log(2*3.14)
 
@@ -138,31 +217,39 @@ for iteration_num in range(0,100):
 		all_cov.append(data_sig_cov_i)
 		#print(index)
 		#print(data_sig_cov_dict[index])
+		data_sig_cov_i[np.isnan(data_sig_cov_i)] = 0.1
+		mvn_qda = -1/2*np.log(np.linalg.det(data_sig_cov_i)+0.01) - np.sum(np.dot((data_sig_matrix-data_sig_mean_i), np.linalg.inv(data_sig_cov_i)) * (data_sig_matrix-data_sig_mean_i), axis=1) + np.log(data_sig_p_i) #+ constant
 
 
-		##################
-		###### get max std of index-set i
-		std_max_i = np.max(np.sqrt(np.diag(data_sig_cov_i)))
-
-		print(data_sig_cov_i)
-		##################
-		###### if std_max_i > std_lim -> convert covariance_matrix to correlation_matrix + std_vector -> set std > std_lim to std_lim
-		if std_max_i > std_lim:
-			corr_i, std_i = cov2corr(data_sig_cov_i, return_std=True)
-			#std_i[std_i>std_lim] = std_lim
-			std_i = std_i / std_max_i * std_lim
-			data_sig_cov_i = corr2cov(corr_i, std_i)
-			#print(data_sig_cov_i)
-
-
-			##################
-			###### calculate mvn density score for each index-set i
-			mvn_qda = -1/2*np.log(np.linalg.det(data_sig_cov_i)) - np.sum(np.dot((data_sig_matrix-data_sig_mean_i), np.linalg.inv(data_sig_cov_i)) * (data_sig_matrix-data_sig_mean_i), axis=1) + np.log(data_sig_p_i) #+ constant
-		else:
-			#print(data_sig_cov_i)
-			mvn_qda = -1/2*np.log(np.linalg.det(data_sig_cov_i)) - np.sum(np.dot((data_sig_matrix-data_sig_mean_i), np.linalg.inv(data_sig_cov_i)) * (data_sig_matrix-data_sig_mean_i), axis=1) + np.log(data_sig_p_i) #+ constant
+		if (np.isnan(np.log(np.linalg.det(data_sig_cov_i)+0.01))):
+			print('check problem')
+			print(data_sig_cov_i)
+			print(np.linalg.det(data_sig_cov_i)+0.01)
+			print(np.log(np.linalg.det(data_sig_cov_i)+0.01))
+			print('check problem ok')
+		'''
+		if np.isnan(np.sum(mvn_qda)):
+			print('cov')
+			print(data_sig_cov_i)
+			print('corr_i')
+			print(corr_i)
+			#print(data_sig_cov_dict[index])
+			print('sig')
+			print(data_sig_dict[index])
+			print('lim')
+			print(np.max(data_sig_dict[index], axis=0))
+			print(np.min(data_sig_dict[index], axis=0))
+			print('dif')
+			print(np.max(data_sig_dict[index], axis=0)-np.min(data_sig_dict[index], axis=0))
+			print('mvn_qda')
+			print(- np.sum(np.dot((data_sig_matrix-data_sig_mean_i), np.linalg.inv(data_sig_cov_i)) * (data_sig_matrix-data_sig_mean_i), axis=1))
+			print(-1/2*np.log(np.linalg.det(data_sig_cov_i)))
+		#print(index)
+		#print(mvn_qda)
+		'''
 		mvn_qda_matrix.append(mvn_qda)
 
+	#break
 	all_cov = (np.array(all_cov))
 	#print(all_cov.shape)
 	all_cov = all_cov.reshape(all_cov.shape[0]*all_cov.shape[1]*all_cov.shape[2],1)
@@ -174,14 +261,17 @@ for iteration_num in range(0,100):
 	###### convert mvn density score to p-value
 	mvn_qda_matrix = np.transpose(np.array(mvn_qda_matrix))
 	mvn_qda_p_matrix = np.exp(mvn_qda_matrix)#-mvn_qda_matrix.max(axis=1, keepdims=True))
+	
 	mvn_qda_p_matrix = mvn_qda_p_matrix / mvn_qda_p_matrix.sum(axis=1, keepdims=True)
 
-
+	print(mvn_qda_matrix[0:10,:])
+	print(np.exp((mvn_qda_matrix[0:10,:])))
+	print(mvn_qda_p_matrix[0:10,:])
 
 	print(np.sum(mvn_qda_p_matrix, axis=1)[0:10])
 	##################
 	###### if 1-sum_mvn_p > 0.5 -> set to index-set 0
-	mvn_qda_p0_matrix = 1-np.sum(mvn_qda_p_matrix, axis=1)
+	mvn_qda_p0_matrix = 1.0-np.sum(mvn_qda_p_matrix, axis=1)
 	print('no pk:')
 	print(np.sum(mvn_qda_p0_matrix>0.5))
 	mvn_qda_p_matrix = np.concatenate((mvn_qda_p_matrix, mvn_qda_p0_matrix.reshape(mvn_qda_p0_matrix.shape[0], 1)), axis=1)
@@ -217,23 +307,33 @@ for iteration_num in range(0,100):
 
 
 	count_table = open('iteration_' + str(iteration_num) + '_count_table.txt','w')
+	change_num = 0
 	for index in data_index_vec:
 		print(index)
 		count_table.write(index+'\t')
+
 		if (index in data_index_pred_count) and (index in data_index_count):
 			print(str(data_index_pred_count[index])+'-'+str(data_index_count[index])+'=' +str(data_index_pred_count[index]-data_index_count[index]))
 			count_table.write(str(data_index_pred_count[index])+'-'+str(data_index_count[index])+'=' +str(data_index_pred_count[index]-data_index_count[index])+'\n')
+			change_num = change_num + abs(data_index_pred_count[index] - data_index_count[index])
 		elif (index in data_index_pred_count) and not (index in data_index_count):
 			print(str(data_index_pred_count[index])+'-'+str(0)+'=' +str(data_index_pred_count[index]))
 			count_table.write(str(data_index_pred_count[index])+'-'+str(0)+'=' +str(data_index_pred_count[index])+'\n')
+			change_num = change_num + abs(data_index_pred_count[index] - 0)
 		elif index in data_index_count:
 			print(str(0)+'-'+str(data_index_count[index])+'=' +str(0-data_index_count[index]))
 			count_table.write(str(0)+'-'+str(data_index_count[index])+'=' +str(0-data_index_count[index])+'\n')
+			change_num = change_num + abs(0-data_index_count[index])
 		else:
 			print(str(0)+'-'+str(0)+'=' +str(0))
 			count_table.write(str(0)+'-'+str(0)+'=' +str(0)+'\n')
 	count_table.close()
 
+	print(mvn_qda_matrix.shape)
+	print(mvn_qda_p_matrix.shape)
+	print(data_sig_matrix.shape)
+	print('change_num:')
+	print(change_num)
 	### updata previous signal matrix
 	data[:,1] = index_pred_vec
 
