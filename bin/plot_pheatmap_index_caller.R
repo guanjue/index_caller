@@ -19,7 +19,7 @@ color_heatmap = function(color_matrix, high_color, low_color, format, outputname
 	### plot pheatmap
 	my_colorbar=colorRampPalette(c(low_color, high_color))(n = 128)
 	col_breaks = c(seq(0, 2000,length=33))
-	pheatmap(color_matrix, color=my_colorbar, cluster_cols = FALSE,cluster_rows=FALSE,annotation_names_row=FALSE,annotation_names_col=TRUE,show_rownames=FALSE,show_colnames=TRUE)
+	pheatmap(color_matrix, color=my_colorbar, cluster_cols = FALSE,cluster_rows=FALSE,annotation_names_row=FALSE,annotation_names_col=TRUE,show_rownames=TRUE,show_colnames=TRUE)
 	dev.off()
 }
 
@@ -30,6 +30,7 @@ color_heatmap = function(color_matrix, high_color, low_color, format, outputname
 signal_matrix_od = as.matrix(read.table(signal_matrix_file, header=FALSE))
 ### extract signal matrix without info
 signal_matrix = signal_matrix_od[ , signal_matrix_start_col:dim(signal_matrix_od)[2] ]
+rownames(signal_matrix) = signal_matrix_od[,1]
 ### convert to numeric matrix
 class(signal_matrix) = 'numeric'
 
@@ -47,4 +48,37 @@ colnames(signal_matrix) = colname_file[,1]
 
 format = png
 color_heatmap(signal_matrix, high_color, low_color, format, output_filename)
+
+
+signal_vec = as.vector(signal_matrix)
+
+library(mixtools)
+
+mixmdl = normalmixEM(signal_vec,k = 3)
+plot(mixmdl,which=2)
+lines(density(signal_vec), lty=2, lwd=2)
+
+
+post = apply(mixmdl$posterior, 1, function(x) which.max(x)-1)
+
+
+post_matrix = t(matrix(post, nrow =  dim(signal_matrix)[2], byrow = TRUE))
+
+post_matrix = (signal_matrix >=3 )*1
+
+post_matrix[signal_matrix>=6] =2
+
+
+new_label = apply(post_matrix, 1, function(x) paste(x, collapse="_"))
+
+
+signal_matrix_relabel = signal_matrix
+rownames(signal_matrix_relabel) = new_label
+
+signal_matrix_relabel = signal_matrix_relabel[order(rownames(signal_matrix_relabel)),]
+color_heatmap(signal_matrix_relabel, high_color, low_color, format, paste(output_filename, '.newlabel.png', sep=''))
+
+png(paste(output_filename, 'density.png', sep=''))
+plot(density(signal_vec, bw=0.2))
+dev.off()
 
