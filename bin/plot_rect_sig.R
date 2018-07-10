@@ -54,7 +54,7 @@ class(signal_matrix) = 'numeric'
 ###### read colnames file
 colname_file = read.table(signal_input_list, header=F)
 ### add colnames
-colnames(signal_matrix) = colname_file[,2]
+colnames(signal_matrix) = colname_file[,1]
 
 ### log2 transform
 if (log2=='T'){

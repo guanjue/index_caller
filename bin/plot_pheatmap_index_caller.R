@@ -53,18 +53,18 @@ color_heatmap(signal_matrix, high_color, low_color, format, output_filename)
 signal_vec = as.vector(signal_matrix)
 
 library(mixtools)
-
+png(paste(output_filename, '.gmm.png', sep=''))
 mixmdl = normalmixEM(signal_vec,k = 3)
-#plot(mixmdl,which=2)
-#lines(density(signal_vec), lty=2, lwd=2)
-
+plot(mixmdl,which=2)
+lines(density(signal_vec), lty=2, lwd=2)
+dev.off()
 
 post = apply(mixmdl$posterior, 1, function(x) which.max(x)-1)
 
 
 post_matrix = t(matrix(post, nrow =  dim(signal_matrix)[2], byrow = TRUE))
 
-level1_lim = 2.9
+level1_lim = 2.1
 level2_lim = 6
 
 post_matrix = (signal_matrix >=level1_lim )*1
@@ -81,7 +81,7 @@ rownames(signal_matrix_relabel) = new_label
 signal_matrix_relabel = signal_matrix_relabel[order(rownames(signal_matrix_relabel)),]
 color_heatmap(signal_matrix_relabel, high_color, low_color, format, paste(output_filename, '.newlabel.png', sep=''))
 
-png(paste(output_filename, 'density.png', sep=''))
+png(paste(output_filename, '.density.png', sep=''))
 plot(density(signal_vec, bw=0.2))
 abline(v = level1_lim, col='orange', lty = 2, lwd = 1.5)
 abline(v = level2_lim, col='red', lty = 2, lwd = 1.5)

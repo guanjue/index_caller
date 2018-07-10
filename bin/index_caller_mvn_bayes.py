@@ -200,17 +200,16 @@ def index_caller(input_signal_mat, output_signal_mat, index_count_lim, std_upper
 		##################
 		###### add non-peak prior for add new index-sets (mvn cluster)
 		### add inactive cluster
-		data_sig_p_dict['_'.join(['N'] * ct_num)+':'+str(iteration_num)] = 1.0 / (total_row_num+alpha_for_empty_index_set)
-		data_sig_mean_dict['_'.join(['N'] * ct_num)+':'+str(iteration_num)] = total_mean_vec
-		data_sig_cov_dict['_'.join(['N'] * ct_num)+':'+str(iteration_num)] = np.identity(ct_num)
-		data_index_vec.append('_'.join(['N'] * ct_num)+':'+str(iteration_num))
-		data_index_count['_'.join(['N'] * ct_num)+':'+str(iteration_num)] = 0.0
+		data_sig_p_dict['_'.join(['N'] * 5)+':'+str(iteration_num)] = 1.0 / (total_row_num+alpha_for_empty_index_set)
+		data_sig_mean_dict['_'.join(['N'] * 5)+':'+str(iteration_num)] = total_mean_vec
+		data_sig_cov_dict['_'.join(['N'] * 5)+':'+str(iteration_num)] = np.identity(ct_num)
+		data_index_vec.append('_'.join(['N'] * 5)+':'+str(iteration_num))
+		data_index_count['_'.join(['N'] * 5)+':'+str(iteration_num)] = 0.0
 
 		###### qda score vector
 		mvn_qda_matrix = []
 		###### index-set peak counts vector
 		data_index_count_vec = []
-
 		###### sort index-set vector 
 		data_index_vec = np.sort(np.array(data_index_vec))
 		###### constant for qda score calculation
@@ -382,7 +381,7 @@ def index_caller(input_signal_mat, output_signal_mat, index_count_lim, std_upper
 				count_table.write(str(0)+'-'+str(0)+'=' +str(0)+'\n')
 		count_table.close()
 
-		###### total changed number
+		###### total changed number 
 		change_num_0 = 0
 		for i in range(0, len(index_pred_vec)):
 			if data[i,1] != index_pred_vec[i]:
