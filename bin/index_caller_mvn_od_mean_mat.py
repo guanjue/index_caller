@@ -48,7 +48,7 @@ def corr2cov(corr, std):
 ################################################################################################
 ### get convert bedtools window output to matrix of pk and intersect function label info
 #data_new = read2d_array('atac_20cell_wg.indexcaller.txt', str)
-data = read2d_array('atac_20cell.sig.18.txt', str)
+data = read2d_array('atac_20cell.sig.10.txt', str)
 
 
 
@@ -74,7 +74,7 @@ for cluster in cluster_vec:
 pred_cluster_mean = np.array(pred_cluster_mean)
 
 data_sig_out = np.concatenate((cluster_vec.reshape((cluster_vec).shape[0],1), pred_cluster_mean), axis=1)
-write2d_array(data_sig_out, 'qda_atac_wg.mvn_check.18.od.txt')
+write2d_array(data_sig_out, 'qda_atac_wg.mvn_check.10.od.txt')
 
 
 

@@ -49,7 +49,7 @@ def corr2cov(corr, std):
 ################################################################################################
 ### get convert bedtools window output to matrix of pk and intersect function label info
 #data_new = read2d_array('atac_20cell_wg.indexcaller.txt', str)
-data_new = read2d_array('atac_20cell.sig.18.txt', str)
+data_new = read2d_array('atac_20cell.sig.10.txt', str)
 
 
 
@@ -67,7 +67,7 @@ data_new_sig = data_new[:,1:].astype(str)
 data_New_sig_matrix_bed = data_new[:,0]
 '''
 
-data = read2d_array('atac_20cell.sig.18.txt', str)
+data = read2d_array('atac_20cell.sig.10.txt', str)
 l_add, h_add = -0.1, 0.1
 
 #data_sig = np.array(data[:,2:], dtype=float)
@@ -81,7 +81,6 @@ l_add, h_add = -0.1, 0.1
 ##################
 ###### set std upper limit for each index-set xi
 std_upper_lim = np.sqrt(3.0)
-#std_lower_lim = np.sqrt(1.0)
 
 
 data_sig_mean_dict = {}
@@ -367,7 +366,7 @@ for iteration_num in range(0,100):
 	y_pred = np.amax(mvn_qda_p_matrix, axis=1)
 	y_pred_mean = np.mean(mvn_qda_p_matrix, axis=1)
 	#print(cluster_id.shape)
-	data_index_vec = np.append(data_index_vec, '0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0')
+	data_index_vec = np.append(data_index_vec, '0_0_0_0_0_0_0_0_0_0')
 	print(y_pred[0:20])
 	print(y_pred_mean[0:20])
 	print(stats.describe(y_pred))
@@ -390,7 +389,7 @@ for iteration_num in range(0,100):
 		if data_index_pred_count[index_pred] < 100:
 			print(index_pred)
 			print(data_index_pred_count[index_pred])
-			index_pred_vec[i] = 'X_X_X_X_X_X_X_X_X_X_X_X_X_X_X_X_X_X'
+			index_pred_vec[i] = 'X_X_X_X_X_X_X_X_X_X'
 
 	### recount index-set number
 	data_index_pred_count = {}
@@ -446,7 +445,7 @@ for iteration_num in range(0,100):
 	data[:,1] = index_pred_vec
 
 change_num_all = np.array(change_num_all)
-write2d_array(change_num_all, 'change_num_all.18.txt')
+write2d_array(change_num_all, 'change_num_all.10.txt')
 
 
 
@@ -469,7 +468,7 @@ data[:,1] = data_sig_pred_vec
 
 data = np.array(data)
 
-write2d_array(data, 'data.adj.18.txt')
+write2d_array(data, 'data.adj.10.txt')
 
 
 
@@ -495,7 +494,7 @@ for cluster in cluster_vec:
 pred_cluster_mean = np.array(pred_cluster_mean)
 
 data_sig_out = np.concatenate((cluster_vec.reshape((cluster_vec).shape[0],1), pred_cluster_mean), axis=1)
-write2d_array(data_sig_out, 'qda_atac_wg.mvn_check.18.txt')
+write2d_array(data_sig_out, 'qda_atac_wg.mvn_check.10.txt')
 
 
 

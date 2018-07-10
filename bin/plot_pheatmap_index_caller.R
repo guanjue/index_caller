@@ -64,9 +64,12 @@ post = apply(mixmdl$posterior, 1, function(x) which.max(x)-1)
 
 post_matrix = t(matrix(post, nrow =  dim(signal_matrix)[2], byrow = TRUE))
 
-post_matrix = (signal_matrix >=3 )*1
+level1_lim = 2.9
+level2_lim = 6
 
-post_matrix[signal_matrix>=6] =2
+post_matrix = (signal_matrix >=level1_lim )*1
+
+post_matrix[signal_matrix>=level2_lim] =2
 
 
 new_label = apply(post_matrix, 1, function(x) paste(x, collapse="_"))
@@ -80,5 +83,14 @@ color_heatmap(signal_matrix_relabel, high_color, low_color, format, paste(output
 
 png(paste(output_filename, 'density.png', sep=''))
 plot(density(signal_vec, bw=0.2))
+abline(v = level1_lim, col='orange', lty = 2, lwd = 1.5)
+abline(v = level2_lim, col='red', lty = 2, lwd = 1.5)
 dev.off()
+
+
+label2newlabel = cbind(signal_matrix_od[,1], new_label)
+write.table(label2newlabel, paste(output_filename, '.label2newlabel.txt', sep=''), quote=FALSE, sep='\t', row.names = FALSE, col.names = FALSE)
+
+
+
 
