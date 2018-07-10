@@ -55,8 +55,8 @@ signal_vec = as.vector(signal_matrix)
 library(mixtools)
 
 mixmdl = normalmixEM(signal_vec,k = 3)
-plot(mixmdl,which=2)
-lines(density(signal_vec), lty=2, lwd=2)
+#plot(mixmdl,which=2)
+#lines(density(signal_vec), lty=2, lwd=2)
 
 
 post = apply(mixmdl$posterior, 1, function(x) which.max(x)-1)
