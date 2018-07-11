@@ -59,13 +59,50 @@ plot(mixmdl,which=2)
 lines(density(signal_vec), lty=2, lwd=2)
 dev.off()
 
+###### get post mean
 post = apply(mixmdl$posterior, 1, function(x) which.max(x)-1)
 
+c0_a = signal_vec[post == 0]
+c1_a = signal_vec[post == 1]
+c2_a = signal_vec[post == 2]
 
-post_matrix = t(matrix(post, nrow =  dim(signal_matrix)[2], byrow = TRUE))
+c0_m = mean(c0_a)
+c1_m = mean(c1_a)
+c2_m = mean(c2_a)
 
-level1_lim = 2.1
-level2_lim = 6
+if (min(c(c0_m, c1_m, c2_m))==c0_m){
+	c0 = c0_a
+} else if (min(c(c0_m, c1_m, c2_m))==c1_m){
+	c0 = c1_a
+} else {
+	c0 = c2_a
+}
+
+if (max(c(c0_m, c1_m, c2_m))==c0_m){
+	c2 = c0_a
+} else if (max(c(c0_m, c1_m, c2_m))==c1_m){
+	c2 = c1_a
+} else {
+	c2 = c2_a
+}
+
+if ((max(c(c0_m, c1_m, c2_m))!=c0_m) & (min(c(c0_m, c1_m, c2_m))!=c0_m)){
+	c1 = c0_a
+} else if ((max(c(c0_m, c1_m, c2_m))!=c0_m) & (min(c(c0_m, c1_m, c2_m))!=c1_m)){
+	c1 = c1_a
+} else {
+	c1 = c2_a
+}
+
+level1_lim = min(c1)
+level2_lim = min(c2)
+
+print('level1_lim: ')
+print(level1_lim)
+print('level2_lim: ')
+print(level2_lim)
+#level1_lim = 2.1
+#level2_lim = 6
 
 post_matrix = (signal_matrix >=level1_lim )*1
 
@@ -82,7 +119,9 @@ signal_matrix_relabel = signal_matrix_relabel[order(rownames(signal_matrix_relab
 color_heatmap(signal_matrix_relabel, high_color, low_color, format, paste(output_filename, '.newlabel.png', sep=''))
 
 png(paste(output_filename, '.density.png', sep=''))
-plot(density(signal_vec, bw=0.2))
+#plot(density(signal_vec, bw=0.2))
+count_hist = hist(signal_vec, breaks = 1000)
+#plot(count_hist$count, log="y", type='h')
 abline(v = level1_lim, col='orange', lty = 2, lwd = 1.5)
 abline(v = level2_lim, col='red', lty = 2, lwd = 1.5)
 dev.off()
