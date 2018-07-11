@@ -109,7 +109,7 @@ for (i in seq(1,dim(r)[2])){
 	signal_matrix_color = cbind(signal_matrix_color, cor_col_tmp)
 }
 ###### replace color matrix cell values
-colnames(signal_matrix_color) = colname_file[,2]
+colnames(signal_matrix_color) = colname_file[,1]
 
 ####################################################
 ###### plot heatmap
