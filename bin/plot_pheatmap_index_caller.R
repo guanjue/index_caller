@@ -128,6 +128,19 @@ dev.off()
 
 
 label2newlabel = cbind(signal_matrix_od[,1], new_label)
+
+check_X = function(x){
+	if (substr(toString(x[1]),1,1)=='X'){
+		new_label = c(x[1], paste(toString(x[2]), 'X', sep='_'))
+	} else {
+		new_label = x
+	}
+	return(new_label)
+}
+
+###### add '_X to new label of X_X_X_...'
+label2newlabel = t( apply(label2newlabel, 1, check_X) )
+
 write.table(label2newlabel, paste(output_filename, '.label2newlabel.txt', sep=''), quote=FALSE, sep='\t', row.names = FALSE, col.names = FALSE)
 
 

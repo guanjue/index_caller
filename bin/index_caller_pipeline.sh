@@ -39,6 +39,10 @@ time python $script_folder'oldlabel2newlabel.py' -i $input_index_signal_mat'.ic.
 sort -k2,2 $input_index_signal_mat'.newlabel.txt' > $input_index_signal_mat'.newlabel.sort.txt'
 time Rscript $script_folder'plot_rect_sig.R' $input_index_signal_mat'.newlabel.sort.txt' $input_index_signal_mat'.newlabel.sort.png' $ct_list 3 dodgerblue white transparent F 0.01
 
+
+sort -k2,2 $input_index_signal_mat'.ic.Nrelabel.txt' > $input_index_signal_mat'.ic.Nrelabel.sort.txt'
+time Rscript $script_folder'plot_rect_sig.R' $input_index_signal_mat'.ic.Nrelabel.sort.txt' $input_index_signal_mat'.ic.Nrelabel.sort.png' $ct_list 3 dodgerblue white transparent F 0.01
+
 ###### plot heatmap of index-set mean signal
 time Rscript $script_folder'plot_pheatmap_index_caller.R' $input_index_signal_mat'.ic.txt.meansig.txt' $input_index_signal_mat'.ic.txt.meansig.png' $ct_list 2 dodgerblue white F 0.0
 
