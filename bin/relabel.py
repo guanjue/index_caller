@@ -56,40 +56,76 @@ for i in range(0, ct_num):
 		print('iteration: ' + str(j))
 		dif_label_num = 0
 		label_vector_pre = label_vector.copy()
-		signal_null = signal_vector[label_vector=='0']
-		###
-		for index_set_old in label_vec_uniq_old:
-			used_id_tmp = label_vec_old==index_set_old
-			index_set_sig_vec = signal_vector[used_id_tmp]
-			### get t-sample test 
-			t_stat, tow_side_pval = stats.ttest_ind(signal_null, index_set_sig_vec, equal_var=False)
-			one_side_pval = stats.t.cdf(t_stat, len(signal_null) + len(index_set_sig_vec) - 2) * 2
-			if np.isnan(one_side_pval):
-				print(signal_null[0:10])
-				print(signal_null.shape)
-				print(index_set_sig_vec[0:10])
-				print(index_set_sig_vec.shape)
-			#print(one_side_pval)
-			if one_side_pval < 0.05:
-				index_ct = '1'
-			else:
-				index_ct = '0'
-			#print('check labels')
-			#print(label_vector[used_id_tmp][0:10])
-			label_vector[used_id_tmp] = index_ct
-			#print(label_vector[used_id_tmp][0:10])
-			#print(label_vector_pre[used_id_tmp][0:2])
-			#print(label_vector[used_id_tmp][0:2])
-			#print(label_vector_pre[used_id_tmp][0]!=label_vector[used_id_tmp][0])
-			#print('check labels DONE')
+		if j == 0:	
+			signal_0 = signal_vector[label_vector=='0']
+			signal_1 = signal_vector[label_vector=='1']			
+			###
+			for index_set_old in label_vec_uniq_old:
+				used_id_tmp = label_vec_old==index_set_old
+				index_set_sig_vec = signal_vector[used_id_tmp]
+				### get t-sample test 
+				t_stat, tow_side_pval = stats.ttest_ind(signal_0, index_set_sig_vec, equal_var=False)
+				one_side_pval = stats.t.cdf(t_stat, len(signal_0) + len(index_set_sig_vec) - 2) * 2
+				if np.isnan(one_side_pval):
+					print(signal_null[0:10])
+					print(signal_null.shape)
+					print(index_set_sig_vec[0:10])
+					print(index_set_sig_vec.shape)
+				#print(one_side_pval)
+				if one_side_pval < 0.05:
+					index_ct = '1'
+				else:
+					index_ct = '0'
+				#print('check labels')
+				#print(label_vector[used_id_tmp][0:10])
+				label_vector[used_id_tmp] = index_ct
+				#print(label_vector[used_id_tmp][0:10])
+				#print(label_vector_pre[used_id_tmp][0:2])
+				#print(label_vector[used_id_tmp][0:2])
+				#print(label_vector_pre[used_id_tmp][0]!=label_vector[used_id_tmp][0])
+				#print('check labels DONE')
 
-			if label_vector_pre[used_id_tmp][0]!=label_vector[used_id_tmp][0]:
-				dif_label_num = dif_label_num +1
+				if label_vector_pre[used_id_tmp][0]!=label_vector[used_id_tmp][0]:
+					dif_label_num = dif_label_num +1
+
+		else:
+			signal_0 = signal_vector[label_vector=='0']
+			signal_1 = signal_vector[label_vector=='1']
+			signal_2 = signal_vector[label_vector=='2']
+			###
+			for index_set_old in label_vec_uniq_old:
+				used_id_tmp = label_vec_old==index_set_old
+				index_set_sig_vec = signal_vector[used_id_tmp]
+				### get t-sample test 
+				t_stat, tow_side_pval = stats.ttest_ind(signal_0, index_set_sig_vec, equal_var=False)
+				one_side_pval = stats.t.cdf(t_stat, len(signal_0) + len(index_set_sig_vec) - 2) * 2
+				if np.isnan(one_side_pval):
+					print(signal_null[0:10])
+					print(signal_null.shape)
+					print(index_set_sig_vec[0:10])
+					print(index_set_sig_vec.shape)
+				#print(one_side_pval)
+				if one_side_pval < 0.05:
+					index_ct = '1'
+				else:
+					index_ct = '0'
+				#print('check labels')
+				#print(label_vector[used_id_tmp][0:10])
+				label_vector[used_id_tmp] = index_ct
+				#print(label_vector[used_id_tmp][0:10])
+				#print(label_vector_pre[used_id_tmp][0:2])
+				#print(label_vector[used_id_tmp][0:2])
+				#print(label_vector_pre[used_id_tmp][0]!=label_vector[used_id_tmp][0])
+				#print('check labels DONE')
+
+				if label_vector_pre[used_id_tmp][0]!=label_vector[used_id_tmp][0]:
+					dif_label_num = dif_label_num +1
+
 		print(dif_label_num)
 		if dif_label_num == 0:
 			print('Converged!')
 			break
-			
+				
 
 	###### append label_vector vector to new_label_mat
 	new_label_mat.append(label_vector)
@@ -106,5 +142,5 @@ new_label_vec = np.array(new_label_vec)
 print(new_label_vec[0:10])
 data[:,1] = new_label_vec
 
-write2d_array(data, 'atac_20cell.sig.18.txt.ic.Nrelabel.txt')
+write2d_array(data, 'atac_20cell.sig.18.txt.ic.Nrelabel1.txt')
 
