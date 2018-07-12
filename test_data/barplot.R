@@ -9,7 +9,7 @@ rownames(counts_c) = rownames_counts
 #counts_c = counts_c[order(counts_c),]
 
 png('barplot.counts.new.png', width=2000, height=2000)
-barplot(t(counts_c), ylim=c(0,130000))
+barplot(t(counts_c), ylim=c(0,165000))
 dev.off()
 
 
@@ -24,5 +24,5 @@ rownames(counts_c) = rownames_counts
 #counts_c = counts_c[order(counts_c),]
 
 png('barplot.counts.old.png', width=2000, height=2000)
-barplot(t(counts_c), ylim=c(0,130000))
+barplot(t(counts_c), ylim=c(0,165000))
 dev.off()
