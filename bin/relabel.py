@@ -71,8 +71,8 @@ for i in range(0, ct_num):
 			index_set_sig_vec = signal_vector[used_id_tmp]
 			### get t-sample test 
 			t_stat, tow_side_pval = stats.ttest_ind(signal_0, index_set_sig_vec, equal_var=False)
-			#one_side_pval_0 = stats.t.cdf(t_stat, len(signal_0) + len(index_set_sig_vec) - 2) * 2
-			if (tow_side_pval < (1e-2 / len(label_vec_uniq_old))) & (np.mean(signal_0) < np.mean(index_set_sig_vec)):
+			one_side_pval_0 = stats.t.sf(np.abs(t_stat), len(signal_0) + len(index_set_sig_vec) - 2) * 2
+			if (one_side_pval_0 < (1e-2 / len(label_vec_uniq_old))) & (np.mean(signal_0) < np.mean(index_set_sig_vec)):
 				index_ct = '1'
 				#t_stat_1, tow_side_pval_1 = stats.ttest_ind(signal_1, index_set_sig_vec, equal_var=False)
 				#one_side_pval_1 = stats.t.cdf(t_stat_1, len(signal_1) + len(index_set_sig_vec) - 2) * 2

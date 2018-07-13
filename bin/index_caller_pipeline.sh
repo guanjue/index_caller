@@ -8,8 +8,8 @@ cut -f3,5,6,7,8,9,10,11,15,20 atac_20cell.sig.18.txt > signal_mat.txt
 ###### paste label & signal_matrix
 paste position_index.txt signal_mat.txt | awk -F '\t' -v OFS='\t' '{if ($2!="0_0_0_0_0_0_0_0_0_0") print $0}' > atac_20cell.sig.10.txt
 
-	input_signal_mat = 'atac_20cell.sig.10.txt'
-	output_signal_mat = 'data.adj.10.txt'
+	input_signal_mat = 'atac_20cell.sig.18.txt'
+	output_signal_mat = 'data.adj.18.txt'
 	index_count_lim = 100
 	std_upper_lim = 3.0
 	std_lower_lim = 0.1
@@ -46,6 +46,11 @@ time Rscript $script_folder'plot_rect_sig.R' $input_index_signal_mat'.ic.Nrelabe
 time python $script_folder'relabel.py'
 sort -k2,2 $input_index_signal_mat'.ic.Nrelabel1.txt' > $input_index_signal_mat'.ic.Nrelabel1.sort.txt'
 time Rscript $script_folder'plot_rect_sig.R' $input_index_signal_mat'.ic.Nrelabel1.sort.txt' $input_index_signal_mat'.ic.Nrelabel1.sort.png' $ct_list 3 dodgerblue white transparent F 0.01
+time Rscript $script_folder'plot_pheatmap_index_caller.R' $input_index_signal_mat'.ic.txt.meansig.txt' $input_index_signal_mat'.ic.txt.meansig.png' $ct_list 2 dodgerblue white F 0.0
+
+
+sort -k2,2 $input_index_signal_mat'.ic.Nlabel.txt' > $input_index_signal_mat'.ic.Nlabel.sort.txt'
+time Rscript $script_folder'plot_rect_sig.R' $input_index_signal_mat'.ic.Nlabel.sort.txt' $input_index_signal_mat'.ic.Nlabel.sort.png' $ct_list 3 dodgerblue white transparent F 0.01
 
 ###### plot heatmap of index-set mean signal
 time Rscript $script_folder'plot_pheatmap_index_caller.R' $input_index_signal_mat'.ic.txt.meansig.txt' $input_index_signal_mat'.ic.txt.meansig.png' $ct_list 2 dodgerblue white F 0.0
