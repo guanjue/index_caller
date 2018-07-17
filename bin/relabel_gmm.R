@@ -1,4 +1,4 @@
-
+library(mixtools)
 
 split_label = function(x, ct_num){
 	xs = unlist(strsplit(toString(x), "_"))
@@ -22,7 +22,8 @@ data_old_label_unique = unique(data_old_label)
 data_old_labe_mat = t(apply(data_old_label, 1, function(x) split_label(x, ct_num) ))
 data_new_labe_mat = c()
 
-
+iteration_num = 100
+gmm_k = 2
 
 for (i in 1:dim(data_sig)[2]){
 	print(paste('cell type ', toString(i), ': ', toString(ct_names[i,]), sep=''))
@@ -30,7 +31,7 @@ for (i in 1:dim(data_sig)[2]){
 	data_sig_ct = data_sig[,i]
 	data_label_ct = data_old_labe_mat[,i]
 	###### iteration update data_sig_ct_0 & data_sig_ct_1
-	for (j in 1:100){
+	for (j in 1:iteration_num){
 		### initializing dif_num for each column for each iteration
 		dif_num = 0
 		### get peak & background
@@ -46,21 +47,10 @@ for (i in 1:dim(data_sig)[2]){
 			t_test_greater_than_bg = t.test(each_index_set_ctsig, data_sig_ct_0, alternative = "greater", var.equal = FALSE)
 			t_test_greater_than_bg_p = t_test_greater_than_bg$p.value
 			if (t_test_greater_than_bg_p < (1e-3/ct_num)){
-				### two sample t-test: t_test_greater_than_1
-				t_test_greater_than_1 = t.test(each_index_set_ctsig, data_sig_ct_1, alternative = "greater", var.equal = FALSE)
-				t_test_greater_than_1_p = t_test_greater_than_1$p.value
-				if (t_test_greater_than_1_p < (1e-3/ct_num)){
-					### relabel as level 2 peak
-					new_label = '2'
-					if (old_label != new_label){
-						data_label_ct[data_old_label == index_set] = new_label
-					}
-				} else {
-					### relabel as level 1 peak
-					new_label = '1'
-					if (old_label != new_label){
-						data_label_ct[data_old_label == index_set] = new_label
-					}
+				### relabel as level 1 peak
+				new_label = '1'
+				if (old_label != new_label){
+					data_label_ct[data_old_label == index_set] = new_label
 				}
 			} else {
 				### relabel as bg
@@ -80,7 +70,9 @@ for (i in 1:dim(data_sig)[2]){
 			break
 		}
 	}
-	### plot 0 & non0 distribution
+
+	### last iteration: use gmm to cluster 1 & 2
+	### fit gmm
 	png(paste('ct_sig.', toString(i), '.density.0.png', sep=''))
 	#plot(density(data_sig_ct_1), lty=2, lwd=2)
 	hist(data_sig_ct_0, breaks=100)
@@ -89,8 +81,36 @@ for (i in 1:dim(data_sig)[2]){
 	#plot(density(data_sig_ct_1), lty=2, lwd=2)
 	hist(data_sig_ct_1, breaks=100)
 	dev.off()
+	mixmdl = normalmixEM(data_sig_ct_1,k = gmm_k)
+	png(paste('ct_sig.', toString(i), '.gmm.png', sep=''))
+	plot(mixmdl,which=2)
+	lines(density(data_sig_ct_1), lty=2, lwd=2)
+	dev.off()
+	###### get post mean
+	post = apply(mixmdl$posterior, 1, function(x) which.max(x)-1)
+	c1_a = signal_vec[post == 0]
+	c2_a = signal_vec[post == 1]
+	c1_m = mean(c1_a)
+	c2_m = mean(c2_a)
+	if (min(c(c1_m, c2_m))==c1_m){
+		c1 = c1_a
+		c2 = c2_a
+	} else {
+		c1 = c2_a
+		c2 = c2_a
+	}
+	level1_lim = min(c1)
+	level2_lim = min(c2)
+	print('level1_lim: ')
+	print(level1_lim)
+	print('level2_lim: ')
+	print(level2_lim)
+	### relabel 1 as 1 or 2
+	data_label_ct[data_sig_ct_1 >= level1_lim] = '1'
+	data_label_ct[data_sig_ct_1 >= level2_lim] = '2'
 	### add new label vector
 	data_new_labe_mat = cbind(data_new_labe_mat, data_label_ct)
+
 }
 
 data_new_labe_vec = apply(data_new_labe_mat, 1, function(x) paste(x, collapse="_"))
